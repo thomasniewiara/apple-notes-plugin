@@ -1,0 +1,101 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "apple-notes",
+  "version": "0.2.0",
+  "description": "Read, create, and update Apple Notes through local macOS automation.",
+  "author": {
+    "name": "Thomas Niewiara"
+  },
+  "keywords": [
+    "apple-notes",
+    "notes",
+    "macos",
+    "productivity"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Apple Notes",
+        "shortDescription": "Read and write Apple Notes",
+        "longDescription": "Read, find, create, and update Apple Notes on your Mac. Uses native macOS automation with your permission. Includes account/folder selection, title search, pagination, and edit-conflict checks. Requires macOS and Python 3. Runs as a local plugin; web and mobile connections are unsupported. Locked notes and editing notes containing attachments are unsupported. Not affiliated with or endorsed by Apple Inc.",
+        "developerName": "Thomas Niewiara",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "logo": "./assets/icon.svg",
+        "composerIcon": "./assets/icon.svg",
+        "brandColor": "#FFD342",
+        "defaultPrompt": [
+          "Find a note in Apple Notes",
+          "Create a new Apple Note",
+          "Add text to an existing Apple Note"
+        ],
+        "websiteURL": "https://github.com/thomasniewiara/apple-notes-plugin",
+        "supportURL": "https://github.com/thomasniewiara/apple-notes-plugin/blob/main/SUPPORT.md",
+        "privacyPolicyURL": "https://github.com/thomasniewiara/apple-notes-plugin/blob/main/PRIVACY.md",
+        "termsOfServiceURL": "https://github.com/thomasniewiara/apple-notes-plugin/blob/main/TERMS.md"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Discover folders using a sample Notes account with one folder and a nested child; return the actual account names, folder paths, and IDs without reading note bodies.",
+              "prompt": "Show my Apple Notes folders, including nested folders.",
+              "tools_triggered": "list_folders",
+              "expected_behavior": "Call list_folders. Return paths and account/folder IDs from its folders array. Do not call get_note_content or any write tool."
+            },
+            {
+              "description": "Use the demo note named Plugin demo. Search titles case-insensitively. When next_offset is non-null, follow it until the requested matches are collected.",
+              "prompt": "Find my Apple Notes with plugin DEMO in the title.",
+              "tools_triggered": "list_notes",
+              "expected_behavior": "Call list_notes with query containing plugin DEMO. Results must be matching titles and metadata from the tool; title search must not be described as full-body search."
+            },
+            {
+              "description": "Use the exact ID of the unlocked Plugin demo note returned by the previous search, containing Coffee, train, raincoat.",
+              "prompt": "Read my Plugin demo note.",
+              "tools_triggered": "list_notes, get_note_content",
+              "expected_behavior": "Resolve the exact note ID, then get_note_content. Return its stored text including Coffee, train, raincoat. If duplicate titles exist, clarify the folder/account before selecting."
+            },
+            {
+              "description": "Use a sample account default folder. The user authorizes creating this sample note.",
+              "prompt": "Create an Apple Note called Weekend plans with the lines Buy coffee and Book the train.",
+              "tools_triggered": "add_note",
+              "expected_behavior": "Call add_note with title Weekend plans and the requested two lines as plain text. Confirm creation using the returned ID/title; do not claim success on a tool error or blindly retry a timeout."
+            },
+            {
+              "description": "Use the Weekend plans note created by the previous case, with no attachments and no password protection.",
+              "prompt": "Add Pack a raincoat to the end of my Weekend plans note.",
+              "tools_triggered": "list_notes, get_note_content, update_note_content, get_note_content",
+              "expected_behavior": "Resolve the exact note ID, read it, then update_note_content in append mode with content Pack a raincoat and expected_modified_at from that read. Read back and show the addition while preserving Buy coffee and Book the train. Re-read and reconcile on conflict."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Deletion is unsupported. Explain that the user must delete in Notes; do not invoke add_note or update_note_content to fake a deletion, and do not claim deletion succeeded.",
+              "prompt": "Delete my Weekend plans Apple Note."
+            },
+            {
+              "description": "The plugin does not unlock password-protected notes. Explain the limit without attempting to bypass the lock or invoke write tools.",
+              "prompt": "Unlock my password-protected Apple Note and show me its contents."
+            },
+            {
+              "description": "Attachment downloads and exports are unsupported. Explain that the user must save the attachment in Notes; do not claim a file was downloaded or use write tools.",
+              "prompt": "Download the PDF attachment from my Apple Note and save it to Downloads."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "Free plugin. No purchases, checkout, subscriptions, or payment tools."
+      },
+      "publication": {
+        "release_notes": "Initial public source release: five Apple Notes tools, native macOS automation, folder/title discovery, read/create/append/replace workflows, conflict checks, installation documentation, and MIT license.",
+        "countries": []
+      }
+    }
+  },
+  "license": "MIT",
+  "repository": "https://github.com/thomasniewiara/apple-notes-plugin",
+  "homepage": "https://github.com/thomasniewiara/apple-notes-plugin"
+}
